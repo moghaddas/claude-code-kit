@@ -1,0 +1,17 @@
+{
+  "description": "Inject a browser User-Agent into curl and wget commands that target an external host",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/curl-ua-guard.sh",
+            "args": []
+          }
+        ]
+      }
+    ]
+  }
+}

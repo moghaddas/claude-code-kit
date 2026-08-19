@@ -1,0 +1,31 @@
+{
+  "name": "curl-ua-guard",
+  "version": "1.0.1",
+  "description": "Gives curl and wget a real browser User-Agent before they leave the machine, so a Cloudflare challenge page never reads as real content.",
+  "author": {
+    "name": "Mo Moghaddas"
+  },
+  "license": "MIT",
+  "keywords": [
+    "hooks",
+    "curl",
+    "wget",
+    "user-agent",
+    "cloudflare",
+    "web-fetch",
+    "pretooluse"
+  ],
+  "userConfig": {
+    "curl_ua_user_agent": {
+      "type": "string",
+      "title": "Browser User-Agent",
+      "description": "The User-Agent string to inject. Bump the Chrome major version periodically: a stale major is one of the things a strict origin gates on.",
+      "default": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+    },
+    "curl_ua_auto_allow": {
+      "type": "boolean",
+      "title": "Auto-approve the rewritten command",
+      "description": "Approve the rewritten curl or wget command without a prompt. Leave it unset to keep the confirmation prompt, which on a curl command is the prompt most worth keeping."
+    }
+  }
+}

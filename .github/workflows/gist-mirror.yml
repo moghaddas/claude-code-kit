@@ -1,0 +1,59 @@
+name: gist-mirror
+
+# The repo is the source of truth. Each gist is a discovery surface that must not
+# drift, so no human edits a gist: this job copies the file after every push to
+# main. A gist edited by hand is overwritten on the next push.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'statusline/claude-code-statusline.sh'
+      - 'plugins/curl-ua-guard/hooks/curl-ua-guard.sh'
+      - 'plugins/help-intercept/hooks/help-intercept.sh'
+      - 'plugins/notify/hooks/notify.sh'
+      - '.github/workflows/gist-mirror.json'
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy each mapped file to its gist
+        env:
+          GH_TOKEN: ${{ secrets.GIST_MIRROR_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "GIST_MIRROR_TOKEN is not set. Add a repo secret holding a token with the gist scope."
+            exit 1
+          fi
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess, sys
+
+          mapping = json.load(open('.github/workflows/gist-mirror.json'))
+          failed = []
+
+          for gist_id, files in mapping.items():
+              payload = {"files": {}}
+              for repo_path, gist_name in files.items():
+                  p = pathlib.Path(repo_path)
+                  if not p.is_file():
+                      failed.append(f"{gist_id}: {repo_path} is absent")
+                      continue
+                  payload["files"][gist_name] = {"content": p.read_text()}
+              if not payload["files"]:
+                  continue
+              r = subprocess.run(
+                  ["gh", "api", "--method", "PATCH", f"/gists/{gist_id}", "--input", "-"],
+                  input=json.dumps(payload), text=True, capture_output=True)
+              if r.returncode != 0:
+                  failed.append(f"{gist_id}: {r.stderr.strip()}")
+              else:
+                  print(f"{gist_id}: pushed {', '.join(payload['files'])}")
+
+          for line in failed:
+              print(line, file=sys.stderr)
+          sys.exit(1 if failed else 0)
+          PY

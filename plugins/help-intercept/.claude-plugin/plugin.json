@@ -1,0 +1,22 @@
+{
+  "name": "help-intercept",
+  "version": "1.0.1",
+  "description": "Print a skill's help text for zero model tokens.",
+  "author": { "name": "Mo Moghaddas" },
+  "license": "MIT",
+  "keywords": ["hooks", "skills", "slash-commands", "help", "tokens"],
+  "userConfig": {
+    "cc_help_heading": {
+      "type": "string",
+      "title": "Help heading",
+      "description": "Heading text that opens the help section of a SKILL.md",
+      "default": "Help"
+    },
+    "cc_help_skill_roots": {
+      "type": "string",
+      "title": "Extra skills directories",
+      "description": "Absolute path to a skills/ directory to search first",
+      "multiple": true
+    }
+  }
+}

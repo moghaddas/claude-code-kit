@@ -1,0 +1,51 @@
+{
+  "name": "moghaddas",
+  "owner": {
+    "name": "Mo Moghaddas"
+  },
+  "description": "Claude Code hooks that make an agent's habits enforceable",
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "curl-ua-guard",
+      "source": "./curl-ua-guard",
+      "category": "web",
+      "description": "Give curl and wget a browser User-Agent before they leave the machine"
+    },
+    {
+      "name": "notify",
+      "source": "./notify",
+      "category": "terminal",
+      "description": "Desktop banner when Claude needs you, or when a long turn ends"
+    },
+    {
+      "name": "doc-guards",
+      "source": "./doc-guards",
+      "category": "writing",
+      "defaultEnabled": false,
+      "description": "Flag comments that narrate history, and set the bar before a CLAUDE.md is written"
+    },
+    {
+      "name": "agent-steer",
+      "source": "./agent-steer",
+      "category": "agents",
+      "defaultEnabled": false,
+      "description": "Correct a running subagent without waiting for it to finish"
+    },
+    {
+      "name": "help-intercept",
+      "source": "./help-intercept",
+      "category": "skills",
+      "description": "Print a skill's help text for zero model tokens"
+    },
+    {
+      "name": "kit",
+      "source": "./kit",
+      "category": "meta",
+      "defaultEnabled": false,
+      "description": "Install all six hooks, across the five plugins"
+    }
+  ]
+}

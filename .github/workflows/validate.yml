@@ -1,0 +1,69 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse every manifest
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            python3 -c "import json,sys;json.load(open(sys.argv[1]))" "$f" \
+              || { echo "invalid JSON: $f"; fail=1; }
+          done < <(find . -path ./.git -prune -o -name '*.json' -print)
+          exit $fail
+
+      - name: Check every shell script parses
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            bash -n "$f" || { echo "syntax error: $f"; fail=1; }
+          done < <(find . -path ./.git -prune -o -name '*.sh' -print)
+          exit $fail
+
+      - name: Confirm every hook script is executable
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            [ -x "$f" ] || { echo "not executable: $f"; fail=1; }
+          done < <(find plugins statusline -name '*.sh' -print)
+          exit $fail
+
+      - name: Confirm each marketplace source resolves to a plugin manifest
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          m = json.load(open('.claude-plugin/marketplace.json'))
+          root = m.get('metadata', {}).get('pluginRoot', '.')
+          bad = []
+          for p in m['plugins']:
+              path = os.path.join(root, p['source'], '.claude-plugin', 'plugin.json')
+              if not os.path.isfile(path):
+                  bad.append((p['name'], path))
+                  continue
+              man = json.load(open(path))
+              if man.get('name') != p['name']:
+                  bad.append((p['name'], f"manifest name is {man.get('name')!r}"))
+          for name, why in bad:
+              print(f"{name}: {why}")
+          sys.exit(1 if bad else 0)
+          PY
+
+  plugin-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Validate the marketplace and every plugin
+        run: |
+          claude plugin validate . --strict
+          for d in plugins/*/; do
+            claude plugin validate "$d" --strict
+          done

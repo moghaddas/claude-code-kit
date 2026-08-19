@@ -1,0 +1,36 @@
+{
+  "name": "notify",
+  "version": "1.0.1",
+  "description": "A desktop notification when Claude Code needs you, or when a long turn finishes. One OSC write through the pty, so it works on a headless or remote host.",
+  "author": {
+    "name": "Mo Moghaddas"
+  },
+  "license": "MIT",
+  "keywords": [
+    "hooks",
+    "notification",
+    "osc",
+    "terminal",
+    "pty",
+    "remote",
+    "headless"
+  ],
+  "userConfig": {
+    "notify_osc": {
+      "type": "string",
+      "title": "OSC sequence",
+      "description": "Which notification escape sequence to write: 777 for VS Code, tmux, and urxvt; 9 for iTerm2; 99 for kitty, WezTerm, and Ghostty. A terminal that does not read the sequence drops it without an error.",
+      "default": "777"
+    },
+    "notify_title": {
+      "type": "string",
+      "title": "Banner title",
+      "description": "Title for both events. Leave it blank for \"Claude Code\" on Notification and \"Claude Code: done\" on Stop. A value here covers both events, so set the done title too if you want to tell them apart."
+    },
+    "notify_title_done": {
+      "type": "string",
+      "title": "Banner title for a finished turn",
+      "description": "Title for the Stop event only. It wins over the shared title, which is how you keep the needs-you and finished banners distinct."
+    }
+  }
+}

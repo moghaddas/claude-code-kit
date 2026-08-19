@@ -1,0 +1,22 @@
+{
+  "name": "doc-guards",
+  "version": "1.0.0",
+  "description": "Flag comments that narrate history, and set the brevity bar before an agent instruction file is written.",
+  "author": { "name": "Mo Moghaddas" },
+  "license": "MIT",
+  "keywords": ["hooks", "comments", "documentation", "code-review", "claude-md"],
+  "userConfig": {
+    "comment_check": {
+      "type": "boolean",
+      "title": "Comment rule check",
+      "description": "Flag comments that narrate history, in code just written",
+      "default": true
+    },
+    "brevity_guard": {
+      "type": "boolean",
+      "title": "Docs brevity guard",
+      "description": "Inject the brevity bar before a CLAUDE.md or SKILL.md is written",
+      "default": true
+    }
+  }
+}

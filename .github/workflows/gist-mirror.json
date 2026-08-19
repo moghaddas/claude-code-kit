@@ -1,0 +1,14 @@
+{
+  "60b937ccb67b2c9b1e9e1d5eed8fe75b": {
+    "statusline/claude-code-statusline.sh": "claude-code-statusline.sh"
+  },
+  "8e1880087290dfce4effca3a97ad69d0": {
+    "plugins/curl-ua-guard/hooks/curl-ua-guard.sh": "claude-code-curl-ua-guard.sh"
+  },
+  "4cfdb7d40a47e1539a0edd8889434ddb": {
+    "plugins/help-intercept/hooks/help-intercept.sh": "claude-code-help-intercept.sh"
+  },
+  "b3ba1d17f85ea89454221c056edbd6fa": {
+    "plugins/notify/hooks/notify.sh": "claude-code-notify.sh"
+  }
+}

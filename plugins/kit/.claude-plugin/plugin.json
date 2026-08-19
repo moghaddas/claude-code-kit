@@ -1,0 +1,14 @@
+{
+  "name": "kit",
+  "version": "1.0.0",
+  "description": "Install all six hooks in this marketplace, across the five plugins.",
+  "author": { "name": "Mo Moghaddas" },
+  "license": "MIT",
+  "dependencies": [
+    "curl-ua-guard",
+    "notify",
+    "doc-guards",
+    "agent-steer",
+    "help-intercept"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "description": "Desktop notification through the terminal when Claude Code needs you or a long turn finishes",
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/notify.sh",
+            "args": ["notification"]
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/notify.sh",
+            "args": ["stop"]
+          }
+        ]
+      }
+    ]
+  }
+}
