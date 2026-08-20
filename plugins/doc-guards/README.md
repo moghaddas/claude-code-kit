@@ -48,6 +48,12 @@ or an interpreter one-liner writes the file and leaves no text to read, so the a
 come from `git diff HEAD -U0` on each file the command writes. Cover Bash, or the hook goes
 quiet for a whole session: an agent told to prefer shell tools edits every file that way.
 
+A path in a Bash command resolves against the directory a leading `cd` selects, not against
+the payload cwd, and git runs in the repository that holds the file. A command shaped
+`cd <dir> && sed -i ... src/app.js` is the common one, and resolving it against the session
+root finds no file and reports nothing. A `cd` whose argument holds a variable stops the
+walk, because resolving it means running it.
+
 Reading git means the Bash arm reports every uncommitted added line in the file, not only
 the lines one command wrote. Nothing offers a per-call baseline after the fact. A per-file
 digest of the findings keeps a repeated report silent, so a loop of `sed -i` calls speaks
