@@ -409,26 +409,27 @@ STATE_DIR = os.path.join(
 STATE_TTL = 3 * 24 * 3600
 
 
-def git(args):
+def git(args, at=None):
     """A completed git run, or None when git cannot answer."""
     try:
-        return subprocess.run(['git'] + args, cwd=cwd or None,
+        return subprocess.run(['git'] + args, cwd=at or cwd or None,
                               capture_output=True, text=True, timeout=5)
     except (OSError, subprocess.SubprocessError):
         return None
 
 
-def tracked(path):
+def tracked(abspath):
     """True, False, or None when the path sits outside a repository."""
-    r = git(['ls-files', '--error-unmatch', '--', path])
+    r = git(['ls-files', '--error-unmatch', '--', abspath],
+            at=os.path.dirname(abspath))
     if r is None or 'not a git repository' in (r.stderr or '').lower():
         return None
     return r.returncode == 0
 
 
-def diff_added(path):
+def diff_added(abspath):
     """Uncommitted added lines for a tracked path, staged and unstaged both."""
-    r = git(['diff', 'HEAD', '-U0', '--', path])
+    r = git(['diff', 'HEAD', '-U0', '--', abspath], at=os.path.dirname(abspath))
     if r is None or r.returncode != 0:
         return ''
     return '\n'.join(line[1:] for line in r.stdout.splitlines()
@@ -445,6 +446,47 @@ def read_capped(abspath):
         return ''
 
 
+def resolve(path, base):
+    """The file the command writes, or '' when no candidate directory holds it."""
+    if os.path.isabs(path):
+        return path if os.path.isfile(path) else ''
+    for root in (base, cwd):
+        if not root:
+            continue
+        candidate = os.path.normpath(os.path.join(root, path))
+        if os.path.isfile(candidate):
+            return candidate
+    return ''
+
+
+CD_RE = re.compile(r"""^\s*cd\s+(?:-[-\w]+\s+)*("[^"]+"|'[^']+'|[^\s;&|]+)\s*(?:&&|;)""")
+
+
+def base_dir(command):
+    """The directory the command's relative paths resolve against.
+
+    A command that opens with `cd <dir> &&` leaves the payload cwd naming the
+    session root while every path in the command is relative to somewhere else.
+    Without this the paths resolve to files that do not exist and the whole Bash
+    arm goes silent. Walks a `cd a && cd b` chain, and gives up on a `cd` whose
+    argument holds a variable or a substitution, which cannot be resolved without
+    running it.
+    """
+    base = cwd or os.getcwd()
+    rest = command or ''
+    for _ in range(4):
+        m = CD_RE.match(rest)
+        if not m:
+            break
+        target = m.group(1).strip('\'"')
+        if '$' in target or '`' in target:
+            break
+        target = os.path.expanduser(target)
+        base = target if os.path.isabs(target) else os.path.join(base, target)
+        rest = rest[m.end():]
+    return os.path.normpath(base)
+
+
 def bash_units(command):
     """(path, added text) for each code file the command writes."""
     if not command:
@@ -456,6 +498,7 @@ def bash_units(command):
     full_write = interpreter or bool(FULL_WRITE_RE.search(command))
     seen = set()
     units = []
+    base = base_dir(command)
     for m in PATH_RE.finditer(command):
         path = m.group(0).strip('.')
         if not eligible(path) or path in seen:
@@ -464,12 +507,12 @@ def bash_units(command):
         if not interpreter and not WRITE_HINT_RE.search(window) and '<<' not in window:
             continue
         seen.add(path)
-        abspath = path if os.path.isabs(path) else os.path.join(cwd or '.', path)
-        if not os.path.isfile(abspath):
+        abspath = resolve(path, base)
+        if not abspath:
             continue
-        state = tracked(path)
+        state = tracked(abspath)
         if state is True:
-            added = diff_added(path)
+            added = diff_added(abspath)
         elif full_write:
             # Untracked, or no repository at all. The whole file counts as new text
             # only because the command wrote it whole.

@@ -233,6 +233,32 @@ def note_for(kind, path):
     return (CLAUDE_MD if kind == "claude" else SKILL_MD).replace("{path}", path)
 
 
+CD_RE = re.compile(r"""^\s*cd\s+(?:-[-\w]+\s+)*("[^"]+"|'[^']+'|[^\s;&|]+)\s*(?:&&|;)""")
+
+
+def base_dir(command, cwd):
+    """The directory the command runs in, after a leading `cd`.
+
+    A command that opens with `cd <dir> &&` commits in a repository the payload
+    cwd does not name, so the index lookup has to follow it or the commit gate
+    never sees the staged file. Gives up on a `cd` whose argument holds a
+    variable or a substitution, which cannot be resolved without running it.
+    """
+    base = cwd or ""
+    rest = command or ""
+    for _ in range(4):
+        m = CD_RE.match(rest)
+        if not m:
+            break
+        target = m.group(1).strip("'\"")
+        if "$" in target or "`" in target:
+            break
+        target = os.path.expanduser(target)
+        base = target if os.path.isabs(target) else os.path.join(base or ".", target)
+        rest = rest[m.end():]
+    return os.path.normpath(base) if base else ""
+
+
 def staged_docs(cwd):
     """Guarded paths in the index, or [] when git cannot answer."""
     try:
@@ -288,7 +314,7 @@ for target in bash_targets(command):
         emit(note_for(kind, target))
 
 if GIT_COMMIT_RE.search(command):
-    docs = staged_docs(data.get("cwd") or "")
+    docs = staged_docs(base_dir(command, data.get("cwd") or ""))
     if docs and claim(session, "commit-gate"):
         emit(COMMIT.replace("{path}", ", ".join(docs[:5])))
 
